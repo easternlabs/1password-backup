@@ -4,7 +4,7 @@ Python 3 script for backing up all content accessible to a user in 1Password.
 
 This script downloads all items and documents accessible to the 1Password user running the script, and saves them all in a compressed tar file, optionally public-key encrypted with gpg.
 
-The script does not use any non-standard Python modules. It requires `op` (the 1Password CLI) *version 1*, `tar`, and `gpg` (if using the public-key encryption) in the search path.
+The script does not use any non-standard Python modules. It requires `op` (1Password CLI 2), `tar`, and `gpg` (if using the public-key encryption) in the search path.
 
 Run the script with `--help` for additional information.
 

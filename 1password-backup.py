@@ -77,16 +77,16 @@ def parse_args():
 
 
 def download_category(args, category, skip_vaults, vault_names):
-    result = subprocess.run(('op', 'list', f'{category}s'),
+    result = subprocess.run(('op', category, 'list'),
                             stdout=subprocess.PIPE, check=True)
     items = json.loads(result.stdout)
-    items = [i for i in items if i['vaultUuid'] not in skip_vaults]
+    items = [i for i in items if i['vault']['id'] not in skip_vaults]
     if args.backup_percentage:
         items = random.choices(
             items, k=int(args.backup_percentage * len(items) / 100))
     vault_to_items = defaultdict(list)
     for i in items:
-        vault_to_items[i['vaultUuid']].append(i)
+        vault_to_items[i['vault']['id']].append(i)
     item_count = 0
     item_total_count = len(items)
     for vault, vault_items in vault_to_items.items():
@@ -95,14 +95,14 @@ def download_category(args, category, skip_vaults, vault_names):
         with open(f'{vault_outdir}.json', 'w') as f:
             json.dump(vault_items, f, indent=2)
         for i in vault_items:
-            uuid = i['uuid']
-            title = i['overview']['title'].replace('/', '_')
+            uuid = i['id']
+            title = i['title'].replace('/', '_')
             item_outdir = f'{vault_outdir}/{uuid}'
             os.makedirs(item_outdir, exist_ok=True)
             outfile = f'{item_outdir}/{title}'
             with open(outfile, 'wb') as f:
                 result = subprocess.run(
-                    ('op', 'get', category, uuid, '--vault', vault),
+                    ('op', category, 'get', uuid, '--vault', vault),
                     stdout=subprocess.PIPE, check=True)
                 f.write(result.stdout)
             item_count += 1
@@ -118,6 +118,7 @@ def download_all(args, skip_vaults, vault_names):
 
 def main():
     args = parse_args()
+    os.environ['OP_FORMAT'] = 'json'
     skip_vaults = set()
     with tempfile.TemporaryDirectory() as tmpdir:
         os.chdir(tmpdir)
@@ -129,11 +130,11 @@ def main():
                 sys.exit(f'Could not find token name and value in op signin '
                          f'output:\n{result.stdout}')
             os.environ[match.group(1)] = match.group(2)
-        result = subprocess.run(('op', 'list', 'vaults'), encoding='utf-8',
+        result = subprocess.run(('op', 'vault', 'list'), encoding='utf-8',
                                 stdout=subprocess.PIPE, check=True)
         vaults = json.loads(result.stdout)
         if not args.private:
-            skip_vaults.update((v['uuid'] for v in vaults
+            skip_vaults.update((v['id'] for v in vaults
                                 if v['name'] == 'Private'))
             vaults = [v for v in vaults if v['name'] != 'Private']
         with open('vaults.json', 'w') as f:
@@ -146,8 +147,8 @@ def main():
                 use_name = f'{use_name} {v["uuid"]}'
                 print(f'Warning: duplicate vault name {v["name"]}; '
                       f'renaming to {use_name}')
-            uuid_to_vault[v['uuid']] = use_name
-            vault_to_uuid[use_name] = v['uuid']
+            uuid_to_vault[v['id']] = use_name
+            vault_to_uuid[use_name] = v['id']
         download_all(args, skip_vaults, uuid_to_vault)
         subprocess.run(('tar', '-c', '-z', '-f', args.output_file, '.'),
                        check=True)
