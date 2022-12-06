@@ -78,7 +78,10 @@ def main():
     if args.hex_mode:
         command.append('-x')
     result = subprocess.run(command, input='\n'.join(shares) + '\n', text=True,
-                            capture_output=True, check=True)
+                            capture_output=True)
+    if result.returncode != 0:
+        sys.exit(f'"{" ".join(command)}" failed, stderr:\n'
+                 f'{result.stderr.strip()}')
     secret = result.stderr.strip()
     if args.output_file == '-':
         print(secret)
