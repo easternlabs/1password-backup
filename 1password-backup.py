@@ -157,12 +157,7 @@ def main():
             if args.force:
                 cmd.append('--yes')
             if args.key:
-                # The documentation claims only --local-user is necessary but
-                # in my real-world experience --default-key is definitely
-                # necessary and --local-user may be as well, so I include both
-                # here.
-                cmd.extend(['--default-key', args.key,
-                            '--local-user', args.key])
+                cmd.extend(['--recipient', args.key])
             cmd.append(args.output_file)
             subprocess.run(cmd, check=True)
             os.unlink(args.output_file)
