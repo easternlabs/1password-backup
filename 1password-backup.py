@@ -135,8 +135,8 @@ def main():
         vaults = json.loads(result.stdout)
         if not args.private:
             skip_vaults.update((v['id'] for v in vaults
-                                if v['name'] == 'Private'))
-            vaults = [v for v in vaults if v['name'] != 'Private']
+                                if v['name'] == 'Employee'))
+            vaults = [v for v in vaults if v['name'] != 'Employee']
         with open('vaults.json', 'w') as f:
             json.dump(vaults, f, indent=2)
         uuid_to_vault = {}
